@@ -1,0 +1,1 @@
+## MERN node starter project

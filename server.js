@@ -9,6 +9,8 @@ import bodyParser from 'body-parser'
 import path from 'path'
 import Pusher from 'pusher'
 
+import mongoPosts from './mongoPosts.js'
+
 Grid.mongo = mongoose.mongo
 
 //app config
@@ -66,9 +68,23 @@ const upload = multer({storage})
 
 // api routes
 app.get('/', (req, res) => res.status(200).send('hello world'))
+
 app.post('/upload/image', upload.single('file'), (req, res)=>{
   res.status(201).send(req.file)
 })
+
+app.post('/upload/post', upload.single('file'), (req, res)=>{
+  const dbPost = req.body
+
+  mongoPosts.create(dbPost,  (err,data) => {
+    if(err){
+      res.status(500).send(err)
+    }else{
+      res.status(201).send(data)
+    }
+  })
+})
+
   
 app.get('/retrieve/image/single', (req,res)=>{
   gfs.files.findOne({filename:req.query.name}, (err,file)=>{
@@ -85,6 +101,20 @@ app.get('/retrieve/image/single', (req,res)=>{
   })
 })
 
+app.get('/retrieve/posts', upload.single('file'), (req, res)=>{  
+  mongoPosts.find((err,data)=>{    
+    if(err){
+      res.status(500).send(err)
+    }else{
+      data.sort((b,a)=>{
+        return a.timestamp -b.timestamp;
+      });
+      res.status(200).send(data)
+    }
+  })
+  
+  
+})
 
 
 // listen
